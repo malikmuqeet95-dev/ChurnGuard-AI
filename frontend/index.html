@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="ChurnGuard AI - Customer Retention Decision Intelligence Dashboard"
+    >
+
+    <title>ChurnGuard AI | Retention Intelligence</title>
+
+    <!--
+        Plotly will be used for the forecast visualization.
+        Detailed chart implementation comes in a later Phase 5 step.
+    -->
+    <script
+        src="https://cdn.plot.ly/plotly-2.35.2.min.js"
+        defer
+    ></script>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <!-- =========================================================
+         APPLICATION SHELL
+    ========================================================== -->
+
+    <div class="app-shell">
+
+        <!-- =====================================================
+             SIDEBAR
+        ====================================================== -->
+
+        <aside class="sidebar">
+
+            <div class="brand">
+
+                <div class="brand-mark">
+                    CG
+                </div>
+
+                <div class="brand-text">
+                    <h1>ChurnGuard</h1>
+                    <span>AI Retention Intelligence</span>
+                </div>
+
+            </div>
+
+
+            <nav class="sidebar-nav">
+
+                <a
+                    href="#customer-profile"
+                    class="nav-item active"
+                >
+                    <span class="nav-icon">01</span>
+                    <span>Customer Profile</span>
+                </a>
+
+                <a
+                    href="#risk-overview"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">02</span>
+                    <span>Risk Overview</span>
+                </a>
+
+                <a
+                    href="#forecast"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">03</span>
+                    <span>Forecast</span>
+                </a>
+
+                <a
+                    href="#explainability"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">04</span>
+                    <span>Risk Drivers</span>
+                </a>
+
+                <a
+                    href="#interventions"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">05</span>
+                    <span>Interventions</span>
+                </a>
+
+                <a
+                    href="#simulation"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">06</span>
+                    <span>What-If</span>
+                </a>
+
+                <a
+                    href="#economics"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">07</span>
+                    <span>Economics</span>
+                </a>
+
+                <a
+                    href="#decision"
+                    class="nav-item"
+                >
+                    <span class="nav-icon">08</span>
+                    <span>Decision</span>
+                </a>
+
+            </nav>
+
+
+            <div class="sidebar-footer">
+
+                <div class="system-status">
+
+                    <span
+                        id="api-status-dot"
+                        class="status-dot status-checking"
+                    ></span>
+
+                    <div>
+                        <strong id="api-status-text">
+                            Checking API...
+                        </strong>
+
+                        <span>
+                            ChurnGuard API
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="version">
+                    v2.0.0
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN CONTENT
+        ====================================================== -->
+
+        <main class="main-content">
+
+            <!-- =================================================
+                 TOP HEADER
+            ================================================== -->
+
+            <header class="topbar">
+
+                <div>
+
+                    <p class="eyebrow">
+                        CUSTOMER RETENTION DECISION INTELLIGENCE
+                    </p>
+
+                    <h2>
+                        Retention Command Center
+                    </h2>
+
+                    <p class="page-description">
+                        Analyze customer churn risk, understand model signals,
+                        evaluate interventions, and make retention decisions.
+                    </p>
+
+                </div>
+
+
+                <div class="topbar-meta">
+                    <button type="button" id="theme-toggle" class="theme-switch-btn" aria-label="Toggle Theme">
+                        <span id="theme-icon">🌙</span>
+                        <span id="theme-label">Dark Mode</span>
+                    </button>   
+                    <div class="environment-badge">
+                        <span class="status-dot status-online"></span>
+                        <span>Live Analysis</span>
+                    </div>
+
+                    <div
+                        id="request-id-display"
+                        class="request-id"
+                    >
+                        Request: —
+                    </div>
+
+                </div>
+
+            </header>
+            <!-- Live Telemetry Status Bar -->
+                <div class="telemetry-bar" style="display: flex; gap: 1rem; background: #0f172a; color: #f8fafc; padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-family: monospace; font-size: 0.85rem; align-items: center; justify-content: space-between;">
+                  <div><span style="color: #22c55e;">●</span> <strong>Status:</strong> <span id="tel-env">Production</span></div>
+                  <div><strong>Uptime:</strong> <span id="tel-uptime">0s</span></div>
+                  <div><strong>Predictions:</strong> <span id="tel-predictions">0</span></div>
+                  <div><strong>P95 Latency:</strong> <span id="tel-p95" style="color: #38bdf8;">0 ms</span></div>
+                  <div><strong>Success Rate:</strong> <span id="tel-success" style="color: #4ade80;">100%</span></div>
+                </div>
+
+            <!-- =================================================
+                 GLOBAL ALERT
+            ================================================== -->
+
+            <div
+                id="global-alert"
+                class="alert hidden"
+                role="alert"
+            >
+                <span id="global-alert-message"></span>
+                <button
+                    id="close-alert"
+                    type="button"
+                    aria-label="Close alert"
+                >
+                    ×
+                </button>
+            </div>
+
+
+            <!-- =================================================
+                 CUSTOMER PROFILE
+            ================================================== -->
+
+            <section
+                id="customer-profile"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-number">01</span>
+
+                        <div>
+                            <h3>Customer Profile</h3>
+
+                            <p>
+                                Enter the customer's current account and
+                                service information.
+                            </p>
+                        </div>
+                    </div>
+
+                    <span class="section-badge">
+                        Prediction Input
+                    </span>
+
+                </div>
+
+
+                <form
+                    id="prediction-form"
+                    class="profile-form"
+                >
+
+                    <!-- =========================================
+                         FORECAST SETTINGS
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Forecast Settings</h4>
+                            <span>Required</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="tenure">
+                                    Current Tenure
+                                    <span>months</span>
+                                </label>
+
+                                <input
+                                    id="tenure"
+                                    name="tenure"
+                                    type="number"
+                                    min="1"
+                                    max="72"
+                                    value="12"
+                                    required
+                                >
+
+                                <small>
+                                    1–72 months
+                                </small>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="forecast_horizon">
+                                    Forecast Horizon
+                                    <span>months</span>
+                                </label>
+
+                                <input
+                                    id="forecast_horizon"
+                                    name="forecast_horizon"
+                                    type="number"
+                                    min="1"
+                                    max="36"
+                                    value="12"
+                                    required
+                                >
+
+                                <small>
+                                    1–36 months
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         CUSTOMER BASICS
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Customer Basics</h4>
+                            <span>Profile</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="gender">
+                                    Gender
+                                </label>
+
+                                <select id="gender" name="gender">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="SeniorCitizen">
+                                    Senior Citizen
+                                </label>
+
+                                <select
+                                    id="SeniorCitizen"
+                                    name="SeniorCitizen"
+                                >
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="Partner">
+                                    Partner
+                                </label>
+
+                                <select id="Partner" name="Partner">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="Dependents">
+                                    Dependents
+                                </label>
+
+                                <select
+                                    id="Dependents"
+                                    name="Dependents"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         BILLING
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Billing & Account Value</h4>
+                            <span>Financial</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="MonthlyCharges">
+                                    Monthly Charges
+                                    <span>USD</span>
+                                </label>
+
+                                <input
+                                    id="MonthlyCharges"
+                                    name="MonthlyCharges"
+                                    type="number"
+                                    min="10"
+                                    max="250"
+                                    step="0.01"
+                                    value="79.85"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="TotalCharges">
+                                    Total Charges
+                                    <span>USD</span>
+                                </label>
+
+                                <input
+                                    id="TotalCharges"
+                                    name="TotalCharges"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value="958.20"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="Contract">
+                                    Contract
+                                </label>
+
+                                <select
+                                    id="Contract"
+                                    name="Contract"
+                                >
+                                    <option value="Month-to-month">
+                                        Month-to-month
+                                    </option>
+
+                                    <option value="One year">
+                                        One year
+                                    </option>
+
+                                    <option value="Two year">
+                                        Two year
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="PaperlessBilling">
+                                    Paperless Billing
+                                </label>
+
+                                <select
+                                    id="PaperlessBilling"
+                                    name="PaperlessBilling"
+                                >
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field field-wide">
+
+                                <label for="PaymentMethod">
+                                    Payment Method
+                                </label>
+
+                                <select
+                                    id="PaymentMethod"
+                                    name="PaymentMethod"
+                                >
+                                    <option value="Electronic check">
+                                        Electronic check
+                                    </option>
+
+                                    <option value="Mailed check">
+                                        Mailed check
+                                    </option>
+
+                                    <option value="Bank transfer (automatic)">
+                                        Bank transfer (automatic)
+                                    </option>
+
+                                    <option value="Credit card (automatic)">
+                                        Credit card (automatic)
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         TELEPHONE
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Telephone Services</h4>
+                            <span>Services</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="PhoneService">
+                                    Phone Service
+                                </label>
+
+                                <select
+                                    id="PhoneService"
+                                    name="PhoneService"
+                                >
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="MultipleLines">
+                                    Multiple Lines
+                                </label>
+
+                                <select
+                                    id="MultipleLines"
+                                    name="MultipleLines"
+                                >
+                                    <option value="No">No</option>
+
+                                    <option value="Yes">
+                                        Yes
+                                    </option>
+
+                                    <option value="No phone service">
+                                        No phone service
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         INTERNET
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Internet Services</h4>
+                            <span>Services</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="InternetService">
+                                    Internet Service
+                                </label>
+
+                                <select
+                                    id="InternetService"
+                                    name="InternetService"
+                                >
+                                    <option value="Fiber optic">
+                                        Fiber optic
+                                    </option>
+
+                                    <option value="DSL">
+                                        DSL
+                                    </option>
+
+                                    <option value="No">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="OnlineSecurity">
+                                    Online Security
+                                </label>
+
+                                <select
+                                    id="OnlineSecurity"
+                                    name="OnlineSecurity"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="OnlineBackup">
+                                    Online Backup
+                                </label>
+
+                                <select
+                                    id="OnlineBackup"
+                                    name="OnlineBackup"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="DeviceProtection">
+                                    Device Protection
+                                </label>
+
+                                <select
+                                    id="DeviceProtection"
+                                    name="DeviceProtection"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="TechSupport">
+                                    Tech Support
+                                </label>
+
+                                <select
+                                    id="TechSupport"
+                                    name="TechSupport"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         ENTERTAINMENT
+                    ========================================== -->
+
+                    <div class="form-group-card">
+
+                        <div class="form-card-title">
+                            <h4>Entertainment Services</h4>
+                            <span>Services</span>
+                        </div>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+
+                                <label for="StreamingTV">
+                                    Streaming TV
+                                </label>
+
+                                <select
+                                    id="StreamingTV"
+                                    name="StreamingTV"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="StreamingMovies">
+                                    Streaming Movies
+                                </label>
+
+                                <select
+                                    id="StreamingMovies"
+                                    name="StreamingMovies"
+                                >
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No internet service">
+                                        No internet service
+                                    </option>
+                                </select>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =========================================
+                         ACTIONS
+                    ========================================== -->
+
+                    <div class="form-actions">
+
+                        <button
+                            id="reset-button"
+                            type="button"
+                            class="button button-secondary"
+                        >
+                            Reset
+                        </button>
+
+                        <button
+                            id="predict-button"
+                            type="submit"
+                            class="button button-primary"
+                        >
+                            <span id="predict-button-text">
+                                Analyze Customer
+                            </span>
+
+                            <span
+                                id="predict-spinner"
+                                class="button-spinner hidden"
+                            ></span>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+
+            <!-- =================================================
+                 RISK OVERVIEW
+            ================================================== -->
+
+            <section
+                id="risk-overview"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-number">02</span>
+
+                        <div>
+                            <h3>Risk Overview</h3>
+
+                            <p>
+                                Current modeled retention risk.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="metric-grid">
+
+                    <article class="metric-card">
+
+                        <div class="metric-label">
+                            Projected Churn
+                        </div>
+
+                        <div
+                            id="projected-churn"
+                            class="metric-value"
+                        >
+                            —
+                        </div>
+
+                        <div class="metric-description">
+                            Probability over forecast horizon
+                        </div>
+
+                    </article>
+
+
+                    <article class="metric-card">
+
+                        <div class="metric-label">
+                            Projected Retention
+                        </div>
+
+                        <div
+                            id="projected-retention"
+                            class="metric-value"
+                        >
+                            —
+                        </div>
+
+                        <div class="metric-description">
+                            Probability of remaining active
+                        </div>
+
+                    </article>
+
+
+                    <article class="metric-card">
+
+                        <div class="metric-label">
+                            Hazard Multiplier
+                        </div>
+
+                        <div
+                            id="hazard-multiplier"
+                            class="metric-value"
+                        >
+                            —
+                        </div>
+
+                        <div class="metric-description">
+                            Relative modeled risk signal
+                        </div>
+
+                    </article>
+
+
+                    <article
+                        id="risk-card"
+                        class="metric-card risk-card"
+                    >
+
+                        <div class="metric-label">
+                            Risk Tier
+                        </div>
+
+                        <div
+                            id="risk-tier"
+                            class="risk-badge risk-neutral"
+                        >
+                            —
+                        </div>
+
+                        <div
+                            id="risk-action"
+                            class="metric-description"
+                        >
+                            Run an analysis to calculate risk.
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FORECAST
+            ================================================== -->
+
+            <section
+                id="forecast"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-number">03</span>
+
+                        <div>
+                            <h3>Forecast Timeline</h3>
+
+                            <p>
+                                Survival and retention trajectory across
+                                the selected horizon.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="panel chart-panel">
+
+                    <div
+                        id="forecast-chart"
+                        class="chart-placeholder"
+                    >
+
+                        <div class="placeholder-icon">
+                            ↗
+                        </div>
+
+                        <h4>
+                            Forecast visualization
+                        </h4>
+
+                        <p>
+                            Run a customer analysis to populate the
+                            survival forecast.
+                        </p>
+
+                    </div>
+
+                    <div class="forecast-summary">
+
+                        <div class="forecast-summary-item">
+                            <span>Current Tenure</span>
+                            <strong id="forecast-current-tenure">—</strong>
+                        </div>
+                    
+                        <div class="forecast-summary-item">
+                            <span>Forecast Horizon</span>
+                            <strong id="forecast-horizon">—</strong>
+                        </div>
+                    
+                        <div class="forecast-summary-item">
+                            <span>Target Month</span>
+                            <strong id="forecast-target-month">—</strong>
+                        </div>
+                    
+                        <div class="forecast-summary-item">
+                            <span>Target Retention</span>
+                            <strong id="forecast-target-retention">—</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 EXPLAINABILITY
+            ================================================== -->
+
+            <section
+                id="explainability"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+
+                    <div>
+                        <span class="section-number">04</span>
+
+                        <div>
+                            <h3>Why Is This Customer At Risk?</h3>
+
+                            <p>
+                                Model signals and business context behind
+                                the prediction.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="two-column-grid">
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <h4>Top Risk Drivers</h4>
+                            <span>Model signals</span>
+                        </div>
+
+                        <div
+                            id="risk-drivers"
+                            class="driver-list"
+                        >
+
+                            <div class="empty-state">
+                                <span>—</span>
+                                <p>
+                                    Prediction drivers will appear here.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+                            <h4>Protective Signals</h4>
+                            <span>Model signals</span>
+                        </div>
+
+                        <div
+                            id="protective-drivers"
+                            class="driver-list"
+                        >
+
+                            <div class="empty-state">
+                                <span>—</span>
+                                <p>
+                                    Protective signals will appear here.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 INTERVENTIONS
+            ================================================== -->
+
+            <section
+                id="interventions"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-number">05</span>
+                    <div>
+                        <span class="section-eyebrow">
+                            RETENTION OPERATIONS
+                        </span>
+                    
+                        <h2>
+                            Intervention Intelligence
+                        </h2>
+                    
+                        <p>
+                            Ranked retention actions based on customer
+                            risk, operational rules, modeled outcomes,
+                            and planning economics.
+                        </p>
+                    </div>
+                    </div>
+                </div>
+                
+                
+                <div
+                    id="interventions-content"
+                    class="interventions-content"
+                >
+                
+                    <div class="empty-state">
+                    
+                        <h3>
+                            No interventions yet
+                        </h3>
+                    
+                        <p>
+                            Run a prediction to generate retention actions.
+                        </p>
+                    
+                    </div>
+                
+                </div>
+                
+                
+                <div class="intervention-disclaimer">
+                
+                    Intervention recommendations are decision-support
+                    outputs based on model signals, business rules,
+                    simulations, and planning assumptions. They are
+                    not guaranteed causal treatment effects.
+                
+                </div>
+            </section>
+
+
+            <!-- =================================================
+                 WHAT-IF
+            ================================================== -->
+
+            <section
+                id="simulation"
+                class="dashboard-section"
+            >
+
+            <div class="section-heading">
+                <div>
+                <span class="section-number">06</span>
+                <div>
+                    <span class="section-eyebrow">WHAT-IF ANALYSIS</span>
+                    <h2>Retention Intervention Simulator</h2>
+                    <p>
+                        Explore how alternative customer configurations
+                        affect the model's projected risk.
+                    </p>
+                </div>
+                </div>
+            </div>
+            
+            <div class="simulation-layout">
+            
+                <div class="simulation-controls">
+                
+                    <div class="simulation-control">
+                        <label for="sim-contract">
+                            Contract
+                        </label>
+                    
+                        <select id="sim-contract">
+                            <option value="">Keep current</option>
+                            <option value="Month-to-month">Month-to-month</option>
+                            <option value="One year">One year</option>
+                            <option value="Two year">Two year</option>
+                        </select>
+                    </div>
+                
+                
+                    <div class="simulation-control">
+                        <label for="sim-payment">
+                            Payment Method
+                        </label>
+                    
+                        <select id="sim-payment">
+                            <option value="">Keep current</option>
+                            <option value="Electronic check">
+                                Electronic check
+                            </option>
+                            <option value="Mailed check">
+                                Mailed check
+                            </option>
+                            <option value="Bank transfer (automatic)">
+                                Bank transfer (automatic)
+                            </option>
+                            <option value="Credit card (automatic)">
+                                Credit card (automatic)
+                            </option>
+                        </select>
+                    </div>
+                
+                
+                    <div class="simulation-control">
+                        <label for="sim-tech-support">
+                            Tech Support
+                        </label>
+                    
+                        <select id="sim-tech-support">
+                            <option value="">Keep current</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="No internet service">
+                                No internet service
+                            </option>
+                        </select>
+                    </div>
+                
+                
+                    <div class="simulation-control">
+                        <label for="sim-security">
+                            Online Security
+                        </label>
+                    
+                        <select id="sim-security">
+                            <option value="">Keep current</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="No internet service">
+                                No internet service
+                            </option>
+                        </select>
+                    </div>
+                
+                
+                    <div class="simulation-actions">
+                    
+                        <button
+                            type="button"
+                            id="run-simulation"
+                            class="btn btn-primary"
+                        >
+                            Run What-If Simulation
+                        </button>
+                    
+                        <button
+                            type="button"
+                            id="reset-simulation"
+                            class="btn btn-secondary"
+                        >
+                            Reset
+                        </button>
+                    
+                    </div>
+                
+                </div>
+            
+            
+                <div
+                    id="simulation-result"
+                    class="simulation-result"
+                >
+            
+                    <div class="simulation-empty">
+                    
+                        <div class="empty-icon">
+                            ↗
+                        </div>
+                    
+                        <h3>No simulation yet</h3>
+                    
+                        <p>
+                            Select one or more changes and run a
+                            what-if simulation.
+                        </p>
+                    
+                    </div>
+                
+                </div>
+            
+            </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ECONOMICS
+            ================================================== -->
+
+            <section
+                id="economics"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+                  <div>
+                        <span class="section-number">07</span>
+                    <div>
+                    
+                        <span class="section-eyebrow">
+                            ECONOMIC INTELLIGENCE
+                        </span>
+                    
+                        <h2>
+                            Retention Economics
+                        </h2>
+                    
+                        <p>
+                            Planning estimates for evaluating
+                            potential retention actions.
+                        </p>
+                    
+                    </div>
+                  </div>
+                </div>
+
+
+                <div class="economics-grid">
+                
+                    <div class="economics-card">
+                    
+                        <span>
+                            Customer Value
+                        </span>
+                    
+                        <strong id="customer-value">
+                            —
+                        </strong>
+                    
+                        <small>
+                            Planning assumption
+                        </small>
+                    
+                    </div>
+                
+                
+                    <div class="economics-card">
+                    
+                        <span>
+                            Estimated Value Preserved
+                        </span>
+                    
+                        <strong id="value-preserved">
+                            —
+                        </strong>
+                    
+                    </div>
+                
+                
+                    <div class="economics-card">
+                    
+                        <span>
+                            Estimated Net Value
+                        </span>
+                    
+                        <strong id="net-value">
+                            —
+                        </strong>
+                    
+                    </div>
+                
+                
+                    <div class="economics-card">
+                    
+                        <span>
+                            Estimated ROI
+                        </span>
+                    
+                        <strong id="roi-percent">
+                            —
+                        </strong>
+                    
+                    </div>
+                
+                </div>
+
+
+                <div class="roi-panel">
+                
+                    <div class="roi-panel-header">
+                    
+                        <h3>
+                            Recommended Intervention
+                        </h3>
+                    
+                        <span
+                            id="roi-recommendation"
+                            class="status-pill"
+                        >
+                            —
+                        </span>
+                    
+                    </div>
+                
+                
+                    <div id="roi-intervention">
+                    
+                        <div class="empty-state">
+                            Run a prediction to calculate
+                            intervention economics.
+                        </div>
+                    
+                    </div>
+                
+                </div>
+
+
+                <div class="economics-disclaimer">
+                
+                    Economic outputs are planning estimates based on
+                    configured assumptions and modeled outcomes.
+                    They are not observed financial results or causal
+                    measurements.
+                
+                </div>
+            </section>
+
+
+            <!-- =================================================
+                 FINAL DECISION
+            ================================================== -->
+
+            <section
+                id="decision"
+                class="dashboard-section"
+            >
+
+                <div class="section-heading">
+                    <div>
+                        <span class="section-number">08</span>
+                        <div>
+                            <span class="section-eyebrow">
+                                DECISION INTELLIGENCE
+                            </span>
+                            <h2>
+                                Final Retention Decision
+                            </h2>
+                            <p>
+                                Recommended operational response based on
+                                risk, business signals, intervention evaluation,
+                                and planning economics.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    id="decision-content"
+                    class="decision-dashboard"
+                >
+                    <div class="empty-state">
+                        <h3>
+                            No decision generated
+                        </h3>
+                        <p>
+                            Run a customer prediction to generate
+                            retention decision intelligence.
+                        </p>
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FOOTER
+            ================================================== -->
+
+            <footer class="app-footer">
+
+                <div>
+                    ChurnGuard AI · Customer Retention Decision Intelligence
+                </div>
+
+                <div>
+                    Model-assisted decision support
+                </div>
+
+            </footer>
+
+        </main>
+
+    </div>
+
+
+    <!-- APPLICATION JAVASCRIPT -->
+    <script src="/js/app.js"></script>
+
+</body>
+</html>

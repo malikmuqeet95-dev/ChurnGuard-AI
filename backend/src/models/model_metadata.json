@@ -1,0 +1,12 @@
+{
+  "model_name": "ChurnGuard Cox Survival Model",
+  "model_version": "1.0.0",
+  "model_type": "Cox Proportional Hazards",
+  "framework": "lifelines",
+  "artifact": "cox_ph_model.pkl",
+  "status": "active",
+  "description": "Customer churn survival prediction model used for retention decision intelligence.",
+  "training_dataset": "telco_churn_features.csv",
+  "feature_schema": "persisted_model_features",
+  "notes": "Predictions estimate modeled churn and retention probabilities. Intervention simulations are non-causal."
+}

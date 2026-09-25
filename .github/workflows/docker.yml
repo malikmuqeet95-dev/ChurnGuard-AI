@@ -1,0 +1,65 @@
+name: ChurnGuard AI Docker
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-build:
+    name: Build Production Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build production Docker image
+        run: |
+          docker build \
+            -f Dockerfile.production \
+            -t churnguard-ai:ci \
+            .
+
+      - name: Run production container
+        run: |
+          docker run -d \
+            --name churnguard-ci \
+            -p 8000:8000 \
+            -e APP_ENV=production \
+            -e API_HOST=0.0.0.0 \
+            -e API_PORT=8000 \
+            -e REQUIRE_API_KEY=false \
+            churnguard-ai:ci
+
+      - name: Wait for container health
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Container failed health check"
+          docker logs churnguard-ci
+          exit 1
+
+      - name: Verify readiness endpoint
+        run: |
+          curl --fail http://127.0.0.1:8000/ready
+
+      - name: Show container status
+        run: |
+          docker ps -a
+          docker inspect churnguard-ci \
+            --format '{{.Config.User}}'
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker rm -f churnguard-ci || true

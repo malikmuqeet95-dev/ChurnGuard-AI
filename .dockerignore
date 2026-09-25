@@ -1,0 +1,79 @@
+# ==============================================================================
+# ChurnGuard AI - Docker Build Context Ignore File
+# ==============================================================================
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python Bytecode and Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing and Coverage Artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# Local Environment Configurations & Secrets (CRITICAL)
+.env
+.env.local
+.env.production
+.env*.local
+
+# Experiment Tracking & Training Artifacts (Local runs)
+mlruns/
+.mlflow/
+catboost_info/
+wandb/
+
+# Git Metadata
+.git/
+.gitignore
+.gitattributes
+
+# IDE and Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Documentation & Temporary Files
+*.log
+*.tmp
+*.bak
+
+.vscode
+.idea
+
+README.md

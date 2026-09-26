@@ -2,11 +2,12 @@
 
 ## Production Customer Churn Survival & Retention Decision Intelligence System
 
+* **Live Dashboard:** https://churnguard-ai-lovat.vercel.app
+
 ### 1. Executive Summary
 
-ChurnGuard AI is an end-to-end machine learning and MLOps platform engineered for customer churn survival prediction, counterfactual intervention analysis, and automated retention decision intelligence. Rather than framing churn as a binary classification problem, the system models time-to-event dynamics using survival analysis to project risks across future customer lifespans, simulate business interventions, and evaluate financial outcomes under human oversight.
-The entire platform is built as a production-grade, observable MLOps system backed by automated CI/CD pipelines, container security hardening, in-process operational telemetry, and an automated test suites.
-
+ChurnGuard AI is an end-to-end machine learning and MLOps platform engineered for customer churn survival prediction and retention decision intelligence. The system integrates time-to-event survival analysis, directional explainability, counterfactual intervention simulation, ROI-based decision support, MLOps lifecycle governance, API security, Docker containerization, CI/CD automation, and operational observability.
+Built as a production-grade, observable service, the platform is backed by automated CI/CD pipelines, container security hardening, in-process operational telemetry, and an automated test suite comprising passing unit and integration tests.
 ---
 
 ### 2. Core Functional Capabilities

@@ -1992,7 +1992,7 @@ function safeNumber(value, fallback = 0) {
 
 async function updateTelemetryBar() {
   try {
-    const res = await fetch('/metrics');
+    const res = await fetch(`${API_BASE_URL}/metrics`);
     if (!res.ok) return;
     const data = await res.json();
     const m = data.metrics;

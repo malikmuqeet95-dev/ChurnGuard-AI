@@ -2325,3 +2325,249 @@ button:disabled {
 .api-checking {
     background: #f59e0b !important;
 }
+
+/* ============================================================
+   CHURNGUARD AI v2.1.0
+   BATCH CUSTOMER RISK SCORING
+   ============================================================ */
+
+.batch-prediction-section {
+    margin-top: 2rem;
+}
+
+.batch-upload-card {
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 16px;
+    padding: 2rem;
+    background: var(--card-background, #ffffff);
+    text-align: center;
+}
+
+.batch-upload-content {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.batch-upload-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.batch-upload-card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.batch-upload-card p {
+    margin-bottom: 1.25rem;
+}
+
+.batch-file-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid var(--border-color, #d1d5db);
+}
+
+.batch-file-label:hover {
+    opacity: 0.9;
+}
+
+.batch-file-name {
+    margin-top: 0.75rem;
+    min-height: 1.5rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.batch-upload-status {
+    margin-top: 1rem;
+    min-height: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.batch-results {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 16px;
+    padding: 1.5rem;
+    background: var(--card-background, #ffffff);
+}
+
+.batch-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.batch-results-header h3 {
+    margin-bottom: 0.35rem;
+}
+
+.batch-results-header p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.batch-results-content {
+    overflow-x: auto;
+}
+
+.batch-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+    );
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.batch-summary-card {
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 12px;
+}
+
+.batch-summary-label {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-bottom: 0.35rem;
+}
+
+.batch-summary-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.batch-risk-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+
+.batch-risk-table th,
+.batch-risk-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(
+        --border-color,
+        #e5e7eb
+    );
+}
+
+.batch-risk-table th {
+    font-weight: 700;
+}
+
+.batch-risk-tier {
+    font-weight: 700;
+}
+
+.batch-risk-tier-critical {
+    font-weight: 700;
+}
+
+.batch-risk-tier-moderate {
+    font-weight: 700;
+}
+
+.batch-risk-tier-healthy {
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+
+    .batch-results-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .batch-upload-card {
+        padding: 1.25rem;
+    }
+}
+
+.batch-distribution-critical {
+    background-color: #ef4444; /* Alert Red */
+}
+
+.batch-distribution-moderate {
+    background-color: #f59e0b; /* Warning Amber */
+}
+
+.batch-distribution-healthy {
+    background-color: #10b981; /* Success Green */
+}
+
+/* Also style the table badge tiers */
+.batch-risk-tier-critical {
+    color: #dc2626;
+}
+
+.batch-risk-tier-moderate {
+    color: #d97706;
+}
+
+.batch-risk-tier-healthy {
+    color: #059669;
+}
+
+/* ============================================================
+   BATCH PORTFOLIO RISK DISTRIBUTION
+   ============================================================ */
+
+.batch-risk-distribution {
+    margin-bottom: 1.5rem;
+}
+
+.batch-risk-distribution h4 {
+    margin-bottom: 0.75rem;
+}
+
+.batch-distribution-bar {
+    display: flex;
+    width: 100%;
+    height: 18px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(
+        --border-color,
+        #e5e7eb
+    );
+}
+
+.batch-distribution-critical,
+.batch-distribution-moderate,
+.batch-distribution-healthy {
+    min-width: 0;
+    transition: width 0.3s ease;
+}
+
+.batch-distribution-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.batch-report-note {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.batch-table-wrapper {
+    overflow-x: auto;
+}
+
+/* Ensure HTML hidden attribute always takes precedence */
+[hidden] {
+    display: none !important;
+}

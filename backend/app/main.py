@@ -1,6 +1,8 @@
 from pathlib import Path
 import logging
 import time
+import io
+import pandas as pd
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +10,11 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi import status
 from fastapi.responses import JSONResponse
+from fastapi import File, UploadFile, Form
+from fastapi.responses import StreamingResponse
 
+from backend.src.batch_validator import BatchValidationError
+from backend.src.batch_predictor import predict_batch
 from backend.app.operational_metrics import operational_metrics
 from backend.app.api_key_security import verify_api_key
 from backend.app.security_middleware import (
@@ -414,4 +420,118 @@ def simulate_interventions(
             status_code=500,
             detail="Internal simulation service error.",
         )
-    
+
+@app.post(
+    "/api/batch-predict",
+    tags=["Batch Prediction"],
+    summary="Score a customer CSV and return a risk report",
+)
+async def batch_predict(
+    file: UploadFile = File(...),
+    forecast_horizon: int = Form(12),
+    _: None = Depends(verify_api_key),
+):
+    """
+    Score multiple customers from an uploaded CSV file.
+
+    The uploaded CSV is validated against the ChurnGuard batch
+    customer contract and scored using the existing survival
+    prediction engine.
+
+    Returns:
+        Downloadable customer_risk_report.csv
+    """
+
+    start_time = time.perf_counter()
+    filename = file.filename or ""
+
+    if not filename.lower().endswith(".csv"):
+        operational_metrics.record_prediction_result(success=False)
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are supported.",
+        )
+
+    try:
+        contents = await file.read()
+
+        if not contents:
+            operational_metrics.record_prediction_result(success=False)
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded CSV file is empty.",
+            )
+
+        dataframe = pd.read_csv(
+            io.BytesIO(contents)
+        )
+
+        # Inject UI-selected forecast horizon if not present in CSV
+        if "forecast_horizon" not in dataframe.columns:
+            dataframe["forecast_horizon"] = forecast_horizon
+
+        # -------------------------------------------------------------
+        # Telemetry: Record customer-level inferences count
+        # -------------------------------------------------------------
+        batch_size = len(dataframe)
+        operational_metrics.record_prediction(count=batch_size)
+
+        # Resolve predictor instance safely
+        predictor_instance = (
+            getattr(prediction_service, "predictor", None)
+            or getattr(prediction_service, "_predictor", None)
+        )
+
+        report = predict_batch(
+            dataframe=dataframe,
+            predictor=predictor_instance,
+        )
+
+        # -------------------------------------------------------------
+        # Telemetry: Record successful run and latency log
+        # -------------------------------------------------------------
+        operational_metrics.record_prediction_result(success=True)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        logger.info(
+            "Batch prediction completed successfully | rows=%d | latency=%.2fms",
+            batch_size,
+            elapsed_ms,
+        )
+
+        output = io.StringIO()
+        report.to_csv(
+            output,
+            index=False,
+        )
+        output.seek(0)
+
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": (
+                    'attachment; '
+                    'filename="customer_risk_report.csv"'
+                )
+            },
+        )
+
+    except HTTPException:
+        raise
+
+    except (BatchValidationError, ValueError) as exc:
+        operational_metrics.record_prediction_result(success=False)
+        raise HTTPException(
+            status_code=422,
+            detail=str(exc),
+        )
+
+    except Exception as exc:
+        operational_metrics.record_prediction_result(success=False)
+        logger.exception("Batch prediction encountered unexpected error: %s", exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Batch prediction failed: {exc}",
+        )
+

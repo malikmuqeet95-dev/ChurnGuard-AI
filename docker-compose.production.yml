@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.production
 
-    image: churnguard-ai:2.0.0-production
+    image: churnguard-ai:2.1.0-production
     container_name: churnguard-production
 
     ports:

@@ -86,11 +86,9 @@ class OperationalMetrics:
             self.latency_samples += 1
             self.latency_samples_ms.append(latency_value)
 
-    def record_prediction(self) -> None:
-        """Record a prediction request."""
-
+    def record_prediction(self, count: int = 1) -> None:
         with self._lock:
-            self.predictions_total += 1
+            self.predictions_total += int(count)
 
     def record_what_if(self) -> None:
         """Record a what-if simulation request."""

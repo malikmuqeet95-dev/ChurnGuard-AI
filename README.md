@@ -23,6 +23,8 @@ Traditional churn systems answer only whether a customer will churn, whereas Chu
 - Intervention simulation 
 - Intervention ROI estimation   
 - Retention decision intelligence  
+- Batch portfolio customer risk scoring & prioritization  
+- Configurable forecast horizon window & exportable risk reports  
 - Data-drift and model monitoring  
 - Retraining management   
 - Production REST API via FastAPI   
@@ -35,9 +37,9 @@ Traditional churn systems answer only whether a customer will churn, whereas Chu
 ```text 
         ┌────────────────────────────────────────────────────────┐
         │                   Frontend (Vercel)                    │
-        │               HTML5 / CSS3 / Vanilla JS                │
+        │  Single Account Analysis  │  Batch Portfolio Upload    │
         └───────────────────────────┬────────────────────────────┘
-                                    │ HTTPS / JSON
+                                    │ HTTPS JSON / Multipart CSV
                                     ▼
         ┌────────────────────────────────────────────────────────┐
         │                 FastAPI Backend (Render)               │
@@ -47,7 +49,7 @@ Traditional churn systems answer only whether a customer will churn, whereas Chu
         │ └─────────┬─────────┘        └───────────────────────┘ │
         │           ▼                                            │
         │ ┌────────────────────────────────────────────────────┐ │
-        │ │ Pydantic Input Validation & Sanitization           │ │
+        │ │ Pydantic Input & Batch Portfolio Schema Validator  │ │
         │ └─────────────────────────┬──────────────────────────┘ │
         │                           ▼                            │
         │ ┌────────────────────────────────────────────────────┐ │
@@ -78,7 +80,7 @@ Traditional churn systems answer only whether a customer will churn, whereas Chu
         │ └─────────────────────────┬──────────────────────────┘ │
         │                           ▼                            │
         │ ┌────────────────────────────────────────────────────┐ │
-        │ │ Final Retention Decision & Action Tier             │ │
+        │ │ Final Retention Decision & Prioritized Risk Export │ │
         │ └────────────────────────────────────────────────────┘ │
         └───────────────────────────┬────────────────────────────┘
                                     ▼

@@ -107,15 +107,14 @@ const DEFAULT_CUSTOMER = {
 document.addEventListener("DOMContentLoaded", () => {
 
     initializeNavigation();
-
     initializeForm();
-
     initializeAlert();
-
     applyDefaultCustomer();
 
     checkApiHealth();
     initializeSimulation();
+    initializeViewSwitcher();
+    initializeBatchPrediction();
 
 });
 
@@ -2053,3 +2052,821 @@ function initializeTheme() {
 }
 
 document.addEventListener("DOMContentLoaded", initializeTheme);
+
+/* ============================================================
+   CHURNGUARD AI v2.1.0 — VIEW SWITCHER & BATCH PORTFOLIO
+   ============================================================ */
+
+function initializeViewSwitcher() {
+    const singleTab = document.getElementById("tab-single-mode");
+    const batchTab = document.getElementById("tab-batch-mode");
+    const singleView = document.getElementById("view-single-customer");
+    const batchView = document.getElementById("view-batch-portfolio");
+    const sidebarNav = document.querySelector(".sidebar-nav");
+
+    if (!singleTab || !batchTab || !singleView || !batchView) return;
+    
+    singleTab.addEventListener("click", () => {
+        singleTab.classList.add("active");
+        singleTab.style.background = "#1f6feb";
+        singleTab.style.color = "#ffffff";
+        
+        batchTab.classList.remove("active");
+        batchTab.style.background = "transparent";
+        batchTab.style.color = "#94a3b8";
+        
+        singleView.hidden = false;
+        batchView.hidden = true;
+        if (sidebarNav) sidebarNav.style.display = ""; // Reset to default stylesheet rules
+    });
+    
+    batchTab.addEventListener("click", () => {
+        batchTab.classList.add("active");
+        batchTab.style.background = "#1f6feb";
+        batchTab.style.color = "#ffffff";
+    
+        singleTab.classList.remove("active");
+        singleTab.style.background = "transparent";
+        singleTab.style.color = "#94a3b8";
+    
+        singleView.hidden = true;
+        batchView.hidden = false;
+        if (sidebarNav) sidebarNav.style.display = "none";
+    });
+}
+
+/* ============================================================
+   CHURNGUARD AI v2.1.0
+   BATCH CUSTOMER RISK SCORING
+   ============================================================ */
+
+let batchReportCsv = null;
+
+function initializeBatchPrediction() {
+
+    const fileInput =
+        document.getElementById("batch-csv-file");
+
+    const fileName =
+        document.getElementById("batch-file-name");
+
+    const predictButton =
+        document.getElementById("batch-predict-button");
+
+    const downloadButton =
+        document.getElementById("batch-download-button");
+
+    if (!fileInput || !fileName || !predictButton) {
+        return;
+    }
+
+    fileInput.addEventListener(
+        "change",
+        () => {
+
+            const file = fileInput.files?.[0];
+
+            if (!file) {
+
+                fileName.textContent =
+                    "No file selected";
+
+                predictButton.disabled = true;
+
+                return;
+            }
+
+            fileName.textContent =
+                file.name;
+
+            const isCsv =
+                file.name
+                    .toLowerCase()
+                    .endsWith(".csv");
+
+            predictButton.disabled =
+                !isCsv;
+
+            if (!isCsv) {
+
+                setBatchStatus(
+                    "Please select a CSV file.",
+                    "error"
+                );
+
+                return;
+            }
+
+            setBatchStatus(
+                "CSV selected and ready for scoring.",
+                "success"
+            );
+        }
+    );
+
+    predictButton.addEventListener(
+        "click",
+        handleBatchPrediction
+    );
+
+    if (downloadButton) {
+
+        downloadButton.addEventListener(
+            "click",
+            downloadBatchReport
+        );
+    }
+}
+
+
+function setBatchStatus(
+    message,
+    type = "info"
+) {
+
+    const status =
+        document.getElementById(
+            "batch-upload-status"
+        );
+
+    if (!status) {
+        return;
+    }
+
+    status.textContent =
+        message;
+
+    status.dataset.status =
+        type;
+}
+
+
+async function handleBatchPrediction() {
+
+    const fileInput =
+        document.getElementById(
+            "batch-csv-file"
+        );
+
+    const predictButton =
+        document.getElementById(
+            "batch-predict-button"
+        );
+
+    const file =
+        fileInput?.files?.[0];
+
+    if (!file) {
+
+        setBatchStatus(
+            "Please select a CSV file first.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (
+        !file.name
+            .toLowerCase()
+            .endsWith(".csv")
+    ) {
+
+        setBatchStatus(
+            "Only CSV files are supported.",
+            "error"
+        );
+
+        return;
+    }
+
+    predictButton.disabled = true;
+
+    predictButton.textContent =
+        "Scoring Customers...";
+
+    setBatchStatus(
+        "Uploading customer data and generating risk predictions...",
+        "loading"
+    );
+
+    try {
+        
+        const horizonSelect =
+            document.getElementById("batch-forecast-horizon");
+        const selectedHorizon =
+            horizonSelect ? horizonSelect.value : "12";
+
+        const formData =
+            new FormData();
+
+        formData.append(
+            "file",
+            file
+        );
+
+        formData.append(
+            "forecast_horizon",
+            selectedHorizon
+        );
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/batch-predict`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+        if (!response.ok) {
+
+            let detail =
+                "Batch prediction failed.";
+
+            try {
+
+                const errorData =
+                    await response.json();
+
+                if (errorData.detail) {
+                    detail =
+                        errorData.detail;
+                }
+
+            } catch (_) {
+                // Keep generic error message.
+            }
+
+            throw new Error(detail);
+        }
+
+        const blob =
+            await response.blob();
+
+        batchReportCsv =
+            await blob.text();
+
+        renderBatchResults(
+            batchReportCsv
+        );
+
+        setBatchStatus(
+            "Batch prediction completed successfully.",
+            "success"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Batch prediction error:",
+            error
+        );
+
+        setBatchStatus(
+            error.message ||
+                "Unable to complete batch prediction.",
+            "error"
+        );
+
+    } finally {
+
+        predictButton.disabled =
+            false;
+
+        predictButton.textContent =
+            "Score Customers";
+    }
+}
+
+
+function parseBatchCsv(csvText) {
+
+    const lines =
+        csvText
+            .trim()
+            .split(/\r?\n/);
+
+    if (lines.length < 2) {
+        return [];
+    }
+
+    const headers =
+        parseCsvLine(lines[0]);
+
+    return lines
+        .slice(1)
+        .map(line => {
+
+            const values =
+                parseCsvLine(line);
+
+            const row = {};
+
+            headers.forEach(
+                (header, index) => {
+
+                    row[header] =
+                        values[index] ?? "";
+                }
+            );
+
+            return row;
+        });
+}
+
+
+function parseCsvLine(line) {
+
+    const values = [];
+
+    let current = "";
+    let insideQuotes = false;
+
+    for (
+        let index = 0;
+        index < line.length;
+        index++
+    ) {
+
+        const character =
+            line[index];
+
+        if (character === '"') {
+
+            if (
+                insideQuotes &&
+                line[index + 1] === '"'
+            ) {
+
+                current += '"';
+                index++;
+
+            } else {
+
+                insideQuotes =
+                    !insideQuotes;
+            }
+
+        } else if (
+            character === "," &&
+            !insideQuotes
+        ) {
+
+            values.push(current);
+            current = "";
+
+        } else {
+
+            current += character;
+        }
+    }
+
+    values.push(current);
+
+    return values;
+}
+
+
+function renderBatchResults(csvText) {
+
+    const resultsContainer =
+        document.getElementById(
+            "batch-results"
+        );
+
+    const content =
+        document.getElementById(
+            "batch-results-content"
+        );
+
+    const summary =
+        document.getElementById(
+            "batch-results-summary"
+        );
+
+    if (
+        !resultsContainer ||
+        !content
+    ) {
+        return;
+    }
+
+    const rows =
+        parseBatchCsv(csvText);
+
+    if (!rows.length) {
+
+        content.innerHTML =
+            "<p>No customer results were returned.</p>";
+
+        resultsContainer.hidden =
+            false;
+
+        return;
+    }
+
+    const total =
+        rows.length;
+
+    const critical =
+        rows.filter(
+            row =>
+                row["Risk Tier"] ===
+                "CRITICAL"
+        ).length;
+
+    const moderate =
+        rows.filter(
+            row =>
+                row["Risk Tier"] ===
+                "MODERATE"
+        ).length;
+
+    const healthy =
+        rows.filter(
+            row =>
+                row["Risk Tier"] ===
+                "HEALTHY"
+        ).length;
+
+    const revenueAtRisk =
+        rows.reduce(
+            (totalValue, row) =>
+                totalValue +
+                (
+                    Number(
+                        row["Revenue at Risk"]
+                    ) || 0
+                ),
+            0
+        );
+
+    const averageChurn =
+        rows.reduce(
+            (sum, row) =>
+                sum +
+                (
+                    Number(
+                        row["Churn Probability"]
+                    ) || 0
+                ),
+            0
+        ) / total;
+
+    const highPriority =
+        rows.filter(
+            row =>
+                row["Risk Tier"] ===
+                    "CRITICAL" ||
+                row["Risk Tier"] ===
+                    "MODERATE"
+        ).length;
+
+    if (summary) {
+
+        summary.textContent =
+            `${total.toLocaleString()} customers scored successfully. ` +
+            `${highPriority.toLocaleString()} require attention based on ` +
+            `their model risk tier.`;
+    }
+
+    const previewRows =
+        rows.slice(0, 25);
+
+    content.innerHTML = `
+
+        <div class="batch-summary-grid">
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Customers Scored
+                </div>
+
+                <div class="batch-summary-value">
+                    ${total.toLocaleString()}
+                </div>
+
+            </div>
+
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Critical Risk
+                </div>
+
+                <div class="batch-summary-value">
+                    ${critical.toLocaleString()}
+                </div>
+
+            </div>
+
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Moderate Risk
+                </div>
+
+                <div class="batch-summary-value">
+                    ${moderate.toLocaleString()}
+                </div>
+
+            </div>
+
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Healthy
+                </div>
+
+                <div class="batch-summary-value">
+                    ${healthy.toLocaleString()}
+                </div>
+
+            </div>
+
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Avg. Churn Probability
+                </div>
+
+                <div class="batch-summary-value">
+                    ${(
+                        averageChurn * 100
+                    ).toFixed(1)}%
+                </div>
+
+            </div>
+
+
+            <div class="batch-summary-card">
+
+                <div class="batch-summary-label">
+                    Revenue at Risk
+                </div>
+
+                <div class="batch-summary-value">
+                    ${formatBatchCurrency(
+                        revenueAtRisk
+                    )}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="batch-risk-distribution">
+
+            <h4>
+                Portfolio Risk Distribution
+            </h4>
+
+            <div class="batch-distribution-bar">
+
+                <div
+                    class="batch-distribution-critical"
+                    style="width: ${
+                        total
+                            ? (
+                                critical /
+                                total *
+                                100
+                            )
+                            : 0
+                    }%"
+                    title="Critical: ${critical}"
+                ></div>
+
+                <div
+                    class="batch-distribution-moderate"
+                    style="width: ${
+                        total
+                            ? (
+                                moderate /
+                                total *
+                                100
+                            )
+                            : 0
+                    }%"
+                    title="Moderate: ${moderate}"
+                ></div>
+
+                <div
+                    class="batch-distribution-healthy"
+                    style="width: ${
+                        total
+                            ? (
+                                healthy /
+                                total *
+                                100
+                            )
+                            : 0
+                    }%"
+                    title="Healthy: ${healthy}"
+                ></div>
+
+            </div>
+
+            <div class="batch-distribution-legend">
+
+                <span>
+                    Critical:
+                    ${critical.toLocaleString()}
+                </span>
+
+                <span>
+                    Moderate:
+                    ${moderate.toLocaleString()}
+                </span>
+
+                <span>
+                    Healthy:
+                    ${healthy.toLocaleString()}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="batch-report-note">
+
+            Showing the first
+            ${Math.min(25, total)}
+            customers in the dashboard.
+
+            Download the complete CSV for all
+            ${total.toLocaleString()}
+            customers.
+
+        </div>
+
+
+        <div class="batch-table-wrapper">
+
+            <table class="batch-risk-table">
+
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Priority</th>
+                        <th>Priority Score</th>
+                        <th>Risk Tier</th>
+                        <th>Hazard Ratio</th>
+                        <th>Churn Prob</th>
+                        <th>Retention Prob</th>
+                        <th>Revenue at Risk</th>
+                        <th>Risk Window</th>
+                        <th>Recommended Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    ${previewRows
+                        .map(
+                            r => `
+
+                            <tr>
+                                <td>${escapeHtml(r["Customer ID"])}</td>
+                                <td>
+                                    <span class="priority-badge priority-${String(r["Priority"] || "").toLowerCase()}">
+                                        ${escapeHtml(r["Priority"])}
+                                    </span>
+                                </td>
+
+                                <td style="font-weight: 700;">${Number(r["Priority Score"] || 0).toFixed(1)}</td>
+                                <td>
+                                    <span class="batch-risk-tier batch-risk-tier-${String(r["Risk Tier"] || "").toLowerCase()}">
+                                        ${escapeHtml(r["Risk Tier"])}
+                                    </span>
+                                </td>
+
+                                <td>${escapeHtml(r["Hazard Ratio"])}×</td>
+                                <td>${(Number(r["Churn Probability"]) * 100).toFixed(1)}%</td>
+
+                                <td>${(Number(r["Retention Probability"]) * 100).toFixed(1)}%</td>
+                                <td style="font-weight: 600;">${formatBatchCurrency(r["Revenue at Risk"])}</td>
+
+                                <td>${escapeHtml(r["Risk Window"])}</td>
+                                <td style="font-size: 0.8rem; color: #334155;">${escapeHtml(r["Recommended Action"])}</td>
+
+                            </tr>
+
+                        `
+                        )
+                        .join("")}
+
+                </tbody>
+
+            </table>
+
+        </div>
+    `;
+
+    resultsContainer.hidden =
+        false;
+}
+
+
+function downloadBatchReport() {
+
+    if (!batchReportCsv) {
+
+        setBatchStatus(
+            "No batch report is available yet.",
+            "error"
+        );
+
+        return;
+    }
+
+    const blob =
+        new Blob(
+            [batchReportCsv],
+            {
+                type: "text/csv;charset=utf-8;",
+            }
+        );
+
+    const url =
+        URL.createObjectURL(blob);
+
+    const link =
+        document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+        "customer_risk_report.csv";
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+}
+
+
+function formatBatchPercent(value) {
+
+    const numeric =
+        Number(value);
+
+    if (Number.isNaN(numeric)) {
+        return "—";
+    }
+
+    return `${(
+        numeric * 100
+    ).toFixed(1)}%`;
+}
+
+
+function formatBatchCurrency(value) {
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) {
+        return "—";
+    }
+    return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(numeric);
+}
+
+
+function escapeBatchHtml(value) {
+
+    return String(value ?? "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}

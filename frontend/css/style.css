@@ -1652,12 +1652,9 @@ a {
 
     .brand {
         justify-content: center;
-
         padding: 20px 10px;
     }
 
-
-    .brand-text,
     .sidebar-footer,
     .nav-item span:not(.nav-icon) {
         display: none;
@@ -1713,49 +1710,166 @@ a {
 
 @media (max-width: 650px) {
 
-    .main-content {
-        padding-left: 16px;
-        padding-right: 16px;
+    /* Free full screen width from the sidebar on mobile */
+    .app-shell {
+        flex-direction: column;
     }
 
+    .sidebar {
+        position: static;
+        width: 100%;
+        min-height: auto;
+        height: auto;
+        flex-direction: column; /* Stack header elements cleanly */
+        align-items: stretch;
+        padding: 12px 14px;
+        border-right: none;
+        border-bottom: 1px solid #202c3e;
+        gap: 10px;
+    }
+
+    /* Keep Brand mark and theme toggle / badges on row 1 */
+
+    .brand {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 0 !important;
+        border-bottom: none !important;
+        width: 100% !important;
+    }
+
+    /* Force the text next to CG to show on mobile */
+    .brand-text {
+        display: block !important;
+    }
+
+    .brand-text h1 {
+        font-size: 15px !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        line-height: 1.1 !important;
+    }
+
+    .brand-text span {
+        display: block !important;
+        font-size: 8.5px !important;
+        color: #8d9bad !important;
+        margin-top: 2px !important;
+        letter-spacing: 0.06em !important;
+    }
+
+    .brand-mark {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 11px !important;
+        border-radius: 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Mode Switcher takes full width on row 2 */
+    .mode-switcher {
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 4px 0 !important;
+    }
+
+    /* Horizontal scrollable navigation row for 01-08 on mobile */
+    .sidebar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 6px !important;
+        padding: 4px 0 !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for clean UI */
+    }
+
+    .nav-item {
+        margin-bottom: 0;
+        padding: 6px 10px;
+        flex-shrink: 0;
+        font-size: 11px;
+    }
+
+    /* Responsive Telemetry Status Bar */
+    .telemetry-bar {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 12px !important;
+        font-size: 11px !important;
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+
+    .telemetry-bar > div {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* Expand main content area across 100% width */
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+        padding: 0 14px 40px;
+        overflow-x: hidden;
+    }
+
+    .topbar {
+        min-height: auto;
+        padding: 18px 0;
+        gap: 14px;
+    }
 
     .topbar h2 {
-        font-size: 24px;
+        font-size: 20px;
+        word-break: break-word;
     }
 
+    .topbar-meta {
+        align-items: flex-start;
+        width: 100%;
+    }
 
     .form-grid,
     .metric-grid,
     .two-column-grid,
-    .intervention-grid {
-        grid-template-columns: 1fr;
+    .intervention-grid,
+    .economics-grid,
+    .roi-details,
+    .forecast-summary,
+    .selected-intervention-details,
+    .simulation-layout {
+        grid-template-columns: 1fr !important;
     }
-
 
     .field-wide {
         grid-column: auto;
     }
 
-
     .form-actions {
         flex-direction: column-reverse;
     }
-
 
     .button {
         width: 100%;
     }
 
-
     .section-heading {
         flex-direction: column;
     }
 
-
     .app-footer {
         flex-direction: column;
+        gap: 8px;
     }
-
 }
 
 /* ============================================================
@@ -2570,4 +2684,27 @@ button:disabled {
 /* Ensure HTML hidden attribute always takes precedence */
 [hidden] {
     display: none !important;
+}
+
+/* ============================================================
+   RESPONSIVE OVERFLOW SAFEGUARDS
+   ============================================================ */
+
+.topbar,
+.decision-terminal-header,
+.status-strip,
+.batch-results-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.decision-terminal-header > *,
+.topbar-meta > * {
+    max-width: 100%;
+}
+
+/* Ensure no child container can blow out the mobile viewport */
+img, svg, canvas {
+    max-width: 100%;
+    height: auto;
 }
